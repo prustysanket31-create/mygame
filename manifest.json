@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "prustysanket31-create.github",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "prustysanket31-create.github",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "com.sanket.game",
+  "description": "This is a fun and fast action game made by me."
+}
