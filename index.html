@@ -152,7 +152,7 @@
 
 <script>
 /**
- * STICKYMAN FIGHT: SILENT EDITION
+ * STICKYMAN FIGHT: SI8LENT EDITION
  * Optimized for APK conversion. No Audio.
  */
 
@@ -197,10 +197,15 @@ window.onload = function() {
 };
 
 document.getElementById('start-btn').addEventListener('click', () => {
-    document.getElementById('menu-screen').style.display = 'none';
-    document.getElementById('ui-layer').style.display = 'block';
-    gameState = 'playing';
-    initGame();
+
+  introMusic.pause();
+  introMusic.currentTime = 0;
+  gameMusic.play().catch(function(){});
+
+  document.getElementById('menu-screen').style.display = 'none';
+  document.getElementById('ui-layer').style.display = 'block';
+  gameState = 'playing';
+  initGame();
 });
 
 function initGame() {
@@ -246,7 +251,7 @@ class Entity {
         ctx.beginPath(); ctx.moveTo(-5,sy); ctx.lineTo(hX,hY); ctx.moveTo(5,sy); ctx.lineTo(hX,hY); ctx.stroke();
         ctx.save(); ctx.translate(hX,hY); ctx.rotate(ang);
         let bladeCol='#888', glow='transparent';
-        if(this.id==='player') {
+        if(this.id==='player') {8
             const s = getStyle();
             if(s==='water') { bladeCol='#0ff'; glow='#00ffff'; }
             if(s==='sun') { bladeCol='#f50'; glow='#ff4400'; }
@@ -443,7 +448,18 @@ document.addEventListener('touchend', e=>{
 
 loop();
 </script>
+
+<audio id="introMusic">
+  <source src="intro.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="gameMusic" loop>
+  <source src="game.mp3" type="audio/mpeg">
+</audio>
+
+<button id="soundBtn" style="position:fixed;top:10px;left:10px;z-index:9999;">
+  🔊 TAP FOR SOUND
+</button>
+
 </body>
 </html>
-
-
