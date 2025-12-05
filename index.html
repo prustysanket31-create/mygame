@@ -2,17 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
+
+    <!-- FORCE LANDSCAPE MODE -->
     <meta name="screen-orientation" content="landscape">
-<meta name="x5-orientation" content="landscape">
-     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="x5-orientation" content="landscape">
+
+    <!-- FORCE FULLSCREEN -->
+    <meta name="full-screen" content="true">
+    <meta name="x5-fullscreen" content="true">
+
+    <!-- VIEWPORT FIX (NO RESIZING, NO ZOOMING) -->
+    <meta name="viewport"
+          content="width=device-width, height=device-height,
+          initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>Stickyman Fight</title>
-    <!-- App Manifest for APK Icon/Name -->
-    <link rel="manifest" href="manifest.json">
-    <style>
-        body {
-            margin: 0; padding: 0; overflow: hidden;
-            background-color: #000;
             font-family: 'Segoe UI', sans-serif;
             touch-action: none; user-select: none; -webkit-user-select: none;
         }
