@@ -3,14 +3,6 @@
 <head>
     <meta charset="UTF-8">
 
-    <!-- FORCE LANDSCAPE MODE -->
-    <meta name="screen-orientation" content="landscape">
-    <meta name="x5-orientation" content="landscape">
-
-    <!-- FORCE FULLSCREEN -->
-    <meta name="full-screen" content="true">
-    <meta name="x5-fullscreen" content="true">
-
     <!-- VIEWPORT LOCK (NO RESIZE, NO ZOOM) -->
     <meta name="viewport"
         content="width=device-width,
@@ -22,6 +14,17 @@
     <title>Stickyman Fight</title>
 
     <style>
+        /* PREVENT SCREEN MOVING */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+body {
+    position: fixed;
+    inset: 0;
+}
         /* SCREENS */
         .screen {
             position: absolute;
@@ -435,6 +438,11 @@ function render() {
         ctx.restore();
     }
 }
+document.addEventListener('touchmove', function(e){
+    e.preventDefault();
+}, { passive: false });
+
+
 
 document.getElementById('btn-switch').addEventListener('touchstart', (e)=>{ e.preventDefault(); e.stopPropagation(); currentStyleIdx = (currentStyleIdx + 1) % STYLES.length; const s = getStyle().toUpperCase(); document.getElementById('current-style').innerText = `BREATHING: ${s} ${(s==='WATER'?'🌊':s==='SUN'?'🔥':s==='THUNDER'?'⚡':'🍃')}`; });
 document.addEventListener('touchstart', e=>{
