@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport"
+    <meta name="screen-orientation" content="landscape">
+<meta name="x5-orientation" content="landscape">
+     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stickyman Fight</title>
     <!-- App Manifest for APK Icon/Name -->
     <link rel="manifest" href="manifest.json">
@@ -460,6 +463,34 @@ loop();
 <button id="soundBtn" style="position:fixed;top:10px;left:10px;z-index:9999;">
   🔊 TAP FOR SOUND
 </button>
+<script>
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        const gameMusic = document.getElementById("gameMusic");
+        if (gameMusic) gameMusic.pause();
 
+        const introMusic = document.getElementById("introMusic");
+        if (introMusic) introMusic.pause();
+    }
+});
+</script>
+<script>
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        const gameMusic = document.getElementById("gameMusic");
+        if (gameMusic) gameMusic.play().catch(()=>{});
+
+        const introMusic = document.getElementById("introMusic");
+        if (introMusic) introMusic.play().catch(()=>{});
+    }
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+   navigator.serviceWorker.register('./service-worker.js')
+    .catch(error => console.log('SW Registration Failed:', error));
+}
+</script>
 </body>
 </html>
