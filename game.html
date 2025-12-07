@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- VIEWPORT LOCK (NO RESIZE, NO ZOOM) -->
+    <meta name="viewport"
+        content="width=device-width,
+        height=device-height,
+        initial-scale=1.0,
+        maximum-scale=1.0,
+        user-scalable=no">
+
+    <title>Stickyman Fight</title>
+
+    <style>
+        /* PREVENT SCREEN MOVING */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    touch-action: none;
+}
+body {
+    position: fixed;
+    inset: 0;
+}
+        /* SCREENS */
+        .screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            z-index: 100;
+            transition: opacity 1s ease;
+        
+        }
+
+        /* INTRO (Sanket Studio) */
+        #intro-screen { z-index: 200; background: #000; pointer-events: none; }
+        .studio-text {
+            font-size: 60px; font-weight: 900; color: white;
+            letter-spacing: 10px; text-transform: uppercase;
+            opacity: 0; transform: scale(0.8);
+            text-shadow: 0 0 30px rgba(255,255,255,0.5);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .presents { font-size: 14px; color: #888; letter-spacing: 5px; margin-bottom: 20px; opacity: 0; }
+
+        @keyframes introAnim {
+            0% { opacity: 0; transform: scale(0.9); }
+            20% { opacity: 1; transform: scale(1); }
+            80% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1.2); }
+        }
+
+        /* MENU */
+        #menu-screen {
+            background: radial-gradient(circle, #222 0%, #000 100%);
+            display: none;
+        }
+        .game-logo {
+            font-size: 70px; font-weight: 900; font-style: italic; color: #fff;
+            text-shadow: 5px 5px 0 #e60000, -3px -3px 0 #00ccff;
+            text-align: center; line-height: 0.9;
+            animation: float 3s infinite ease-in-out;
+        }
+        @keyframes float { 0%, 100% {transform:translateY(0);} 50% {transform:translateY(-20px);} }
+        
+        button.btn-start {
+            margin-top: 50px; padding: 20px 60px; font-size: 24px; font-weight: bold;
+            color: #fff; background: transparent; border: 2px solid #00aaff; border-radius: 50px;
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.4); cursor: pointer;
+            text-transform: uppercase; letter-spacing: 2px;
+            transition: all 0.2s; pointer-events: auto;
+        }
+        button.btn-start:active { transform: scale(0.95); background: #00aaff; }
+
+        /* VICTORY */
+        #victory-screen { display: none; background: rgba(0,0,0,0.95); z-index: 150; }
+        .vic-title { font-size: 80px; color: gold; text-shadow: 0 0 30px orange; font-weight: 900; }
+
+        /* HUD */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; display: none; pointer-events: none; }
+        #hud-score {
+            position: absolute; top: 20px; left: 20px;
+            font-size: 24px; color: white; font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0,0,0,1);
+        }
+        #current-style {
+            position: absolute; top: 20px; right: 20px;
+            font-size: 20px; color: cyan; font-weight: bold; text-align: right;
+            text-shadow: 0 0 10px cyan;
+        }
+
+        /* CONTROLS */
+        #controls-area { position: absolute; bottom: 0; width: 100%; height: 100%; pointer-events: auto; }
+        
+        .c-btn {
+            position: absolute; width: 90px; height: 90px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 35px; color: white; backdrop-filter: blur(5px);
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+            transition: transform 0.1s; user-select: none;
+        }
+        .c-btn:active { transform: scale(0.9); }
+
+        #btn-atk { bottom: 40px; right: 40px; background: rgba(255, 50, 50, 0.3); border: 2px solid rgba(255,100,100,0.5); }
+        #btn-switch { bottom: 40px; right: 150px; width: 60px; height: 60px; font-size: 25px; background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255,255,255,0.3); }
+
+        /* CINEMATIC */
+        #cinematic-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: none; z-index: 80; perspective: 1000px;
+        }
+        .breath-text {
+            font-size: 80px; font-weight: 900; font-style: italic; color: white;
+            text-shadow: 0 0 20px currentColor; opacity: 0;
+            transform-style: preserve-3d; white-space: nowrap;
+        }
+        @keyframes breath3D {
+            0% { opacity: 0; transform: rotateX(45deg) scale(0.5) translateZ(-500px); }
+            10% { opacity: 1; transform: rotateX(0deg) scale(1) translateZ(0); }
+            80% { opacity: 1; transform: rotateX(0deg) scale(1.1) translateZ(50px); filter: blur(0px); }
+            100% { opacity: 0; transform: rotateX(-45deg) scale(1.5) translateZ(200px); filter: blur(10px); }
+        }
+
+        #rotate-msg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; color: white; justify-content: center; align-items: center; }
+        @media screen and (orientation: portrait) { #rotate-msg { display: flex; } }
+    </style>
+</head>
+<body>
+
+    <!-- INTRO -->
+    <div id="intro-screen" class="screen">
+        <div class="presents" id="intro-sub">PRESENTED BY</div>
+        <div class="studio-text" id="intro-main">SANKET STUDIO</div>
+    </div>
+
+    <!-- MENU -->
+    <div id="menu-screen" class="screen">
+        <div class="game-logo">STICKYMAN<br>FIGHT</div>
+        <button class="btn-start" id="start-btn">BEGIN MISSION</button>
+    </div>
+
+    <!-- VICTORY -->
+    <div id="victory-screen" class="screen">
+        <div class="vic-title">VICTORY</div>
+        <button class="btn-start" onclick="location.reload()">REPLAY</button>
+    </div>
+
+    <!-- UI -->
+    <div id="ui-layer">
+        <div id="hud-score">KILLS: 0</div>
+        <div id="current-style">BREATHING: WATER 🌊</div>
+        <div id="controls-area">
+            <div id="btn-switch" class="c-btn">🔄</div>
+            <div id="btn-atk" class="c-btn">⚔️</div>
+        </div>
+    </div>
+
+    <div id="cinematic-overlay"><div id="cine-text" class="breath-text"></div></div>
+    <div id="rotate-msg"><h1>↻ ROTATE PHONE</h1></div>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+/**
+ * STICKYMAN FIGHT: SI8LENT EDITION
+ * Optimized for APK conversion. No Audio.
+ */
+
+// --- GAME LOGIC ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const CFG = { kills: 50, gravity: 0.5, ground: 100 };
+
+let gameState = 'intro';
+let score = 0;
+let player;
+let enemies = [];
+let particles = [];
+let deadBodies = [];
+let hitStop = 0;
+let cam = {x:0, y:0, zoom:1, shake:0};
+let input = {x:0, jump:false, attack:false};
+let joy = {active:false, id:null, sx:0, sy:0, cx:0, cy:0, rad:60};
+
+const STYLES = ['water', 'sun', 'thunder', 'wind'];
+let currentStyleIdx = 0;
+function getStyle() { return STYLES[currentStyleIdx]; }
+
+function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+// --- SEQUENCE ---
+
+window.onload = function() {
+    // Start Intro Animation
+    const tMain = document.getElementById('intro-main');
+    const tSub = document.getElementById('intro-sub');
+    tSub.style.animation = 'introAnim 4s forwards';
+    tMain.style.animation = 'introAnim 4s forwards 0.5s';
+
+    setTimeout(() => {
+        document.getElementById('intro-screen').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'flex';
+        gameState = 'menu';
+    }, 4500);
+};
+
+document.getElementById('start-btn').addEventListener('click', () => {
+
+  introMusic.pause();
+  introMusic.currentTime = 0;
+  gameMusic.play().catch(function(){});
+
+  document.getElementById('menu-screen').style.display = 'none';
+  document.getElementById('ui-layer').style.display = 'block';
+  gameState = 'playing';
+  initGame();
+});
+
+function initGame() {
+    player = new Player();
+    enemies = []; particles = []; deadBodies = []; score = 0;
+    document.getElementById('hud-score').innerText = "KILLS: 0";
+}
+
+// --- ENTITIES ---
+class Entity {
+    constructor(x, color) {
+        this.x=x; this.y=canvas.height-CFG.ground;
+        this.vx=0; this.vy=0; this.color=color; this.facing=1;
+        this.anim=0; this.state='idle'; this.dead=false;
+    }
+    physics() {
+        this.vy += CFG.gravity;
+        this.x += this.vx; this.y += this.vy;
+        let f = canvas.height-CFG.ground;
+        if(this.y>f) { this.y=f; this.vy=0; this.vx*=0.8; }
+        if(this.x<0) this.x=0; if(this.x>canvas.width) this.x=canvas.width;
+        this.anim++;
+    }
+    draw(ctx) {
+        ctx.save(); ctx.translate(this.x, this.y); ctx.scale(this.facing, 1);
+        ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0,0,15,5,0,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle=this.color; ctx.lineWidth=4; ctx.lineCap='round'; ctx.fillStyle=this.color;
+        let bob = Math.sin(this.anim*0.2)*2; if(this.state==='idle') bob = Math.sin(this.anim*0.05);
+        let l=(this.state==='run')?Math.sin(this.anim*0.3)*15:0;
+        let r=(this.state==='run')?Math.sin(this.anim*0.3+Math.PI)*15:0;
+        ctx.beginPath(); ctx.moveTo(0,-35+bob); ctx.lineTo(-10+l,0); ctx.moveTo(0,-35+bob); ctx.lineTo(10+r,0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,-35+bob); ctx.lineTo(0,-65+bob); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0,-75+bob,9,0,Math.PI*2); ctx.fill();
+        this.drawArms(ctx, -60+bob);
+        ctx.restore();
+    }
+    drawArms(ctx, sy) {
+        let hX=15, hY=sy+20, ang=-0.7;
+        if(this.state==='attack') {
+            let p = this.anim/10; ang = -1.5 + (p*3.5); 
+            hX = Math.cos(ang-1.5)*30; hY = sy + Math.sin(ang-1.5)*30;
+        }
+        ctx.beginPath(); ctx.moveTo(-5,sy); ctx.lineTo(hX,hY); ctx.moveTo(5,sy); ctx.lineTo(hX,hY); ctx.stroke();
+        ctx.save(); ctx.translate(hX,hY); ctx.rotate(ang);
+        let bladeCol='#888', glow='transparent';
+        if(this.id==='player') {8
+            const s = getStyle();
+            if(s==='water') { bladeCol='#0ff'; glow='#00ffff'; }
+            if(s==='sun') { bladeCol='#f50'; glow='#ff4400'; }
+            if(s==='thunder') { bladeCol='#ff0'; glow='#ffff00'; }
+            if(s==='wind') { bladeCol='#cfc'; glow='#ccffcc'; }
+        } else { bladeCol='#f44'; glow='#f00'; }
+        ctx.strokeStyle=bladeCol; ctx.shadowColor=glow; ctx.shadowBlur=15;
+        ctx.beginPath(); ctx.moveTo(0,-5); ctx.quadraticCurveTo(5,-40,0,-80); ctx.stroke();
+        ctx.shadowBlur=0; ctx.restore();
+    }
+}
+
+class Player extends Entity {
+    constructor() { super(canvas.width/2, '#fff'); this.id='player'; this.cd=0; }
+    update() {
+        this.vx += input.x * 2;
+        if(Math.abs(input.x)>0.1) { this.facing=Math.sign(input.x); this.state='run'; } else this.state='idle';
+        if(input.jump && this.vy===0) { this.vy = -15; input.jump=false; }
+        if(this.cd>0) this.cd--;
+        if(input.attack && this.cd<=0) {
+            this.state='attack'; this.anim=0; this.cd=15;
+            const s = getStyle();
+            if(s==='water') { this.vx = this.facing * 20; spawnParticles(this.x, this.y-40, 'water'); }
+            if(s==='sun') { this.vx = this.facing * 10; spawnParticles(this.x, this.y-40, 'fire'); }
+            if(s==='thunder') { this.x += this.facing * 150; this.vx=0; spawnParticles(this.x, this.y-40, 'spark'); spawnTrail(this.x, this.y); } 
+            if(s==='wind') { this.vx = this.facing * 5; spawnParticles(this.x, this.y-40, 'wind'); }
+            checkHit(this); input.attack=false;
+        }
+        if(this.state==='attack' && this.anim>10) this.state='idle';
+        this.physics();
+    }
+}
+
+class Enemy extends Entity {
+    constructor() { super(Math.random()<0.5?-50:canvas.width+50, '#aaa'); this.id='enemy'; this.speed=1+Math.random(); }
+    update() {
+        if(this.dead) return;
+        let d = player.x - this.x;
+        if(Math.abs(d)>60) {
+            this.vx += Math.sign(d)*0.2;
+            if(Math.abs(this.vx)>this.speed) this.vx=Math.sign(this.vx)*this.speed;
+            this.facing=Math.sign(d); this.state='run';
+        }
+        if(Math.abs(d)<90 && Math.abs(player.y-this.y)<50 && this.state!=='attack') {
+            if(Math.random()<0.03) { this.state='attack'; this.anim=0; }
+        }
+        if(this.state==='attack') {
+            if(this.anim===6) checkHit(this);
+            if(this.anim>15) this.state='idle';
+        }
+        this.physics();
+    }
+}
+
+function spawnManager() {
+    let active = enemies.filter(e=>!e.dead).length;
+    if(score + active < CFG.kills && active < 5) {
+        if(Math.random()<0.05) enemies.push(new Enemy());
+    }
+}
+
+function checkHit(atk) {
+    let targets = (atk.id==='player') ? enemies : [player];
+    targets.forEach(t => {
+        if(!t.dead && Math.abs(atk.x-t.x)<130 && Math.abs(atk.y-t.y)<60) {
+            if(atk.id==='player') {
+                t.dead=true; score++;
+                document.getElementById('hud-score').innerText = `KILLS: ${score}`;
+                hitStop=5; cam.shake=20; cam.zoom=1.05;
+                spawnBlood(t.x, t.y-40, t.facing);
+                deadBodies.push({x:t.x, y:t.y, color:'#333'});
+                const s = getStyle();
+                if(s==='sun') spawnParticles(t.x, t.y, 'fire_explode');
+                if(s==='wind') t.x += player.facing * 100;
+                if(score % 10 === 0) playCinematic();
+                if(score >= CFG.kills) win();
+            } else {
+                player.vx = atk.facing * 10;
+                spawnBlood(player.x, player.y-40, 0);
+                cam.shake=10;
+            }
+        }
+    });
+}
+
+function playCinematic() {
+    const s = getStyle();
+    let txt = "WATER BREATHING"; let col = "cyan";
+    if(s==='sun') { txt="HINOKAMI KAGURA"; col="orange"; }
+    if(s==='thunder') { txt="THUNDERCLAP FLASH"; col="yellow"; }
+    if(s==='wind') { txt="WIND BREATHING"; col="lightgreen"; }
+    const el = document.getElementById('cine-text');
+    el.innerText = txt; el.style.color = col; el.style.textShadow = `0 0 20px ${col}`;
+    el.style.animation = 'none'; el.offsetHeight; 
+    el.style.animation = 'breath3D 1.5s forwards';
+    hitStop = 40;
+}
+
+function win() {
+    gameState='win';
+    document.getElementById('victory-screen').style.display='flex';
+}
+
+function spawnParticles(x, y, type) {
+    for(let i=0; i<10; i++) {
+        let col='#fff', s=4, vx=(Math.random()-0.5)*15, vy=(Math.random()-0.5)*15;
+        if(type==='water') { col='cyan'; s=6; vy=-Math.random()*10; }
+        if(type==='fire') { col='orange'; s=5; vy=-Math.random()*20; }
+        if(type==='spark') { col='yellow'; s=3; vx=(Math.random()-0.5)*30; }
+        if(type==='wind') { col='#cfc'; s=2; vx*=2; vy*=2; }
+        if(type==='fire_explode') { col='red'; s=8; vx*=2; vy*=2; }
+        particles.push({x, y, vx, vy, color:col, size:s, life:1, type});
+    }
+}
+function spawnBlood(x, y, dir) { for(let i=0; i<15; i++) particles.push({x, y, vx:(Math.random()-0.5)*10+(dir*5), vy:-Math.random()*15, color:'#a00', size:Math.random()*5, life:1, type:'blood'}); }
+function spawnTrail(x, y) { particles.push({x, y, vx:0, vy:0, color:'yellow', size:2, life:0.5, type:'line', x2:x-150, y2:y}); }
+
+function loop() {
+    requestAnimationFrame(loop);
+    if(hitStop>0) { hitStop--; render(); return; }
+    if(gameState==='playing') {
+        spawnManager();
+        player.update();
+        enemies.forEach((e,i)=>{ e.update(); if(e.dead) enemies.splice(i,1); });
+        for(let i=particles.length-1; i>=0; i--) {
+            let p=particles[i];
+            p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
+            if(p.type==='blood') p.vy+=0.5;
+            if(p.life<=0) particles.splice(i,1);
+        }
+        cam.shake*=0.8; cam.zoom+=(1-cam.zoom)*0.1;
+    }
+    render();
+}
+
+function render() {
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    if(gameState==='intro') return; // Don't render game during intro
+
+    ctx.save();
+    let cx=canvas.width/2, cy=canvas.height/2;
+    let dx=(Math.random()-0.5)*cam.shake, dy=(Math.random()-0.5)*cam.shake;
+    ctx.translate(cx+dx, cy+dy); ctx.scale(cam.zoom, cam.zoom); ctx.translate(-cx, -cy);
+
+    ctx.fillStyle='#111'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#222'; ctx.fillRect(0, canvas.height-CFG.ground, canvas.width, CFG.ground);
+
+    deadBodies.forEach(b=>{ ctx.fillStyle=b.color; ctx.fillRect(b.x-15, b.y-5, 30, 10); });
+    enemies.forEach(e=>e.draw(ctx));
+    if(player) player.draw(ctx);
+
+    particles.forEach(p=>{
+        ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.strokeStyle=p.color;
+        if(p.type==='line') { ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x2, p.y2); ctx.stroke(); }
+        else { ctx.shadowBlur=10; ctx.shadowColor=p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0; }
+        ctx.globalAlpha=1;
+    });
+    ctx.restore();
+
+    if(joy.active) {
+        ctx.save();
+        ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(joy.sx, joy.sy, joy.rad, 0, Math.PI*2); ctx.stroke();
+        ctx.fillStyle='rgba(0,255,255,0.5)';
+        ctx.beginPath(); ctx.arc(joy.cx, joy.cy, 20, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+}
+document.addEventListener('touchmove', function(e){
+    e.preventDefault();
+}, { passive: false });
+
+
+
+document.getElementById('btn-switch').addEventListener('touchstart', (e)=>{ e.preventDefault(); e.stopPropagation(); currentStyleIdx = (currentStyleIdx + 1) % STYLES.length; const s = getStyle().toUpperCase(); document.getElementById('current-style').innerText = `BREATHING: ${s} ${(s==='WATER'?'🌊':s==='SUN'?'🔥':s==='THUNDER'?'⚡':'🍃')}`; });
+document.addEventListener('touchstart', e=>{
+    if(gameState!=='playing') return;
+    for(let i=0; i<e.changedTouches.length; i++) {
+        let t=e.changedTouches[i], b=document.getElementById('btn-atk').getBoundingClientRect();
+        if(t.clientX>=b.left && t.clientX<=b.right && t.clientY>=b.top && t.clientY<=b.bottom) { input.attack=true; continue; }
+        if(t.clientX < window.innerWidth/2 && !joy.active) { joy.active=true; joy.id=t.identifier; joy.sx=t.clientX; joy.sy=t.clientY; joy.cx=t.clientX; joy.cy=t.clientY; }
+    }
+}, {passive:false});
+document.addEventListener('touchmove', e=>{
+    if(gameState!=='playing') return;
+    for(let i=0; i<e.changedTouches.length; i++) {
+        let t=e.changedTouches[i];
+        if(t.identifier===joy.id) {
+            let dx=t.clientX-joy.sx, dy=t.clientY-joy.sy, d=Math.sqrt(dx*dx+dy*dy);
+            if(d>joy.rad) { let a=Math.atan2(dy,dx); dx=Math.cos(a)*joy.rad; dy=Math.sin(a)*joy.rad; }
+            joy.cx=joy.sx+dx; joy.cy=joy.sy+dy;
+            input.x=dx/joy.rad; if(dy/joy.rad < -0.6) input.jump=true;
+        }
+    }
+}, {passive:false});
+document.addEventListener('touchend', e=>{
+    for(let i=0; i<e.changedTouches.length; i++) { if(e.changedTouches[i].identifier===joy.id) { joy.active=false; input.x=0; input.jump=false; } }
+});
+
+loop();
+</script>
+
+<audio id="introMusic">
+  <source src="intro.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="gameMusic" loop>
+  <source src="game.mp3" type="audio/mpeg">
+</audio>
+
+<button id="soundBtn" style="position:fixed;top:10px;left:10px;z-index:9999;">
+  🔊 TAP FOR SOUND
+</button>
+<script>
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        const gameMusic = document.getElementById("gameMusic");
+        if (gameMusic) gameMusic.pause();
+
+        const introMusic = document.getElementById("introMusic");
+        if (introMusic) introMusic.pause();
+    }
+});
+</script>
+<script>
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        const gameMusic = document.getElementById("gameMusic");
+        if (gameMusic) gameMusic.play().catch(()=>{});
+
+        const introMusic = document.getElementById("introMusic");
+        if (introMusic) introMusic.play().catch(()=>{});
+    }
+});
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+   navigator.serviceWorker.register('./service-worker.js')
+    .catch(error => console.log('SW Registration Failed:', error));
+}
+</script>
+</body>
+</html>
